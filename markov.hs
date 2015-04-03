@@ -1,6 +1,6 @@
 -- My brain hurts Hasuike. My brain hurts.
 
-module Fluffy.Markov where
+module Markov where
   import qualified Data.Map as Map
   import Data.Map (Map, (!))
   import System.Random
@@ -39,6 +39,14 @@ module Fluffy.Markov where
     let (roll, gen') = randomR (0.0, 1.0) gen
     next <- markovNext chain prev roll
     return (chain, next, gen')
+  
+  traverseMarkov :: (RandomGen g, Ord a) => (MarkovChain a, a, g) -> [a]
+  traverseMarkov arg = let
+    tm arg = case markovNextSS arg of
+      (Just next) -> arg : (tm next)
+      Nothing -> []
+    snd3 (_, b, _) = b
+    in map snd3 $ tm arg
   
   type FreqTally a = Map a (Map a Prob)
   

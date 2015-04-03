@@ -2,6 +2,7 @@ import Markov
 import Control.Monad
 import qualified Data.Map as Map
 import Data.Maybe
+import System.Environment
 import System.Random
 
 parseSCName :: String -> [String]
@@ -33,6 +34,9 @@ readManySCNames = foldM (flip readSCNames) Map.empty
 
 main :: IO ()
 main = do
+  args <- getArgs
+  let leaky = "-l" `elem` args
+  let tm = if leaky then traverseMarkovLeaky else traverseMarkov
   input' <- getLine
   let input = words input'
   tally <- readManySCNames input
@@ -41,6 +45,6 @@ main = do
   let nameCount = read input'' :: Int
   forM_ [1 .. nameCount] (\_ -> do
     gen <- newStdGen
-    let str = traverseMarkov (chain, Start, gen)
+    let str = tm (chain, Start, gen)
     putStrLn $ unparseSCName $ nodesToStrs str
     )

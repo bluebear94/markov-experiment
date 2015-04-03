@@ -48,6 +48,27 @@ module Markov where
     snd3 (_, b, _) = b
     in map snd3 $ tm arg
   
+  leakyP = 0.05
+  
+  markovNextSSLeaky :: (RandomGen g, Ord a) => (MarkovChain a, a, g) -> Maybe (MarkovChain a, a, g)
+  markovNextSSLeaky (chain, prev, gen) = do
+    let (roll, gen') = randomR (0.0, 1.0) gen
+    if (roll < leakyP) then let
+      (idx, gen'') = randomR (0, (Map.size chain) - 1) gen'
+      next = fst $ Map.elemAt idx chain
+      in return (chain, next, gen'')
+    else do
+      let roll' = (roll - leakyP) / (1 - leakyP)
+      next <- markovNext chain prev roll'
+      return (chain, next, gen')
+  traverseMarkovLeaky :: (RandomGen g, Ord a) => (MarkovChain a, a, g) -> [a]
+  traverseMarkovLeaky arg = let
+    tm arg = case markovNextSSLeaky arg of
+      (Just next) -> arg : (tm next)
+      Nothing -> []
+    snd3 (_, b, _) = b
+    in map snd3 $ tm arg
+    
   type FreqTally a = Map a (Map a Prob)
   
   -- takes a map from keys to frequency tallies, and returns a recognized Markov chain

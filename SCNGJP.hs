@@ -3,6 +3,7 @@ import Control.Monad
 import qualified Data.Map as Map
 import Data.Maybe
 import System.Environment
+import System.IO
 import System.Random
 
 parseSCName :: String -> [String]
@@ -24,8 +25,10 @@ unparseSCName (prequote : inwords) = prequote ++ "「" ++ (join inwords) ++ "」
 readSCNames :: String -> FreqTally (MSNode String) -> IO (FreqTally (MSNode String))
 readSCNames character tally = do
   let path = "superu/" ++ character ++ ".txt"
-  text <- readFile path
-  let lns = lines text
+  handle <- openFile path ReadMode
+  hSetEncoding handle utf8
+  text <- hGetContents handle
+  let lns = filter (not . null) (lines text)
   let sclens = map parseSCName lns
   return $ tallyNN tally sclens
 

@@ -24,8 +24,10 @@ unparseSCName (prequote : inwords) = prequote ++ "\"" ++ (unwords inwords) ++ "\
 readSCNames :: String -> FreqTally (MSNode String) -> IO (FreqTally (MSNode String))
 readSCNames character tally = do
   let path = "spells/" ++ character ++ ".txt"
-  text <- readFile path
-  let lns = lines text
+  handle <- openFile path ReadMode
+  hSetEncoding handle utf8
+  text <- hGetContents handle
+  let lns = filter (not . null) (lines text)
   let sclens = map parseSCName lns
   return $ tallyNN tally sclens
 
